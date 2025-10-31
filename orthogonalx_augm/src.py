@@ -268,7 +268,7 @@ class IO_orthogonal_augmentation(object):
         # orthogonality check
         self.training_orthogonality = Phi_train.T @ (learning_component_train - Phi_train @ self.theta_aux)
 
-    def approx_Hessian(self, Xi_train: np.ndarary, Y_train: np.ndarray, N: int):
+    def approx_Hessian(self, Xi_train: np.ndarray, Y_train: np.ndarray, N: int):
         """
         Approximates the hessian of the cost function at the optimized parameters.
 

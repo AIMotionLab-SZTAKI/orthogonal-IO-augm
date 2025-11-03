@@ -34,6 +34,7 @@ if __name__ == "__main__":
     seed = 0  # for Monte Carlo study
     noise = False  # if True, adds noise to achieve 30 dB SNR
     estim_data = 0  # 0 - symmetric distribution with "trick", 1 - symmetric distribution (only with N->inf), 2 - asymm. distr.
+    estimate_covariance = False  # if True, the script calculates and plots the estimated covariance matrix
 
     # data generation
     np.random.seed(10)  # for data generation: keep it constant for reproducibility!
@@ -104,36 +105,26 @@ if __name__ == "__main__":
     print(f"Tuned baseline params: [{theta_base_final[0]}, {theta_base_final[1]}]")
     print(f"Error of baseline params: {np.linalg.norm(theta_true-theta_base_final, 2)}")
 
-    H = model.approx_Hessian(u_train, y_train, 2*N)
-    H_masked = H.copy()
-    H_masked[np.abs(H) < 1e-14] = np.nan  # set numerically zero elements as NaN for masking
+    if estimate_covariance:
+        H, _ = model.approx_covariance_mx(u_train, y_train, 2*N, 1)
+        H_masked = H.copy()
+        H_masked[np.abs(H) < 1e-6] = np.nan
 
-    cmap = sns.diverging_palette(220, 10, as_cmap=True)  # normal colormap
-    # Use matplotlib's colormap with NaN handling
-    cmap.set_bad(color='k')  # color for NaNs
+        cmap = sns.diverging_palette(220, 10, as_cmap=True)  # normal colormap
+        # Use matplotlib's colormap with NaN handling
+        cmap.set_bad(color='k')  # color for NaNs
 
-    fig, ax = plt.subplots(figsize=(3.4, 3.4))
-    sns.heatmap(H_masked, linewidth=0.5, square=True, cmap=cmap, ax=ax, cbar_kws={"shrink": 0.73})
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-    ax.set_xlabel(r'$\theta_j$')
-    ax.set_ylabel(r'$\theta_i$')
-    plt.tight_layout()
-    plt.show(block=False)
+        plt.rc('font', family='serif')
+        plt.rc('text', usetex=True)
 
-    fig, ax = plt.subplots(2, 1, layout="tight")
-    ax[0].set_title("Training data")
-    ax[0].plot(u_train, y_train, '.', label="True output")
-    ax[0].plot(u_train, y_train - Y_pred_train, '.', label="Pred. error (augmented mdl.)")
-    ax[0].plot(u_train, y_train - y_base_train, '.', label="Pred. error (tuned baseline mdl.")
-    ax[0].legend()
-    ax[0].grid()
-    ax[1].set_title("Test data")
-    ax[1].plot(u_test, y_test, '.', label="True")
-    ax[1].plot(u_test, y_test - Y_pred_test, '.', label="Prediction error")
-    ax[1].plot(u_test, y_test - y_base_test, '.', label="Base")
-    ax[1].grid()
-    plt.show(block=False)
+        fig, ax = plt.subplots(figsize=(3.4, 3.4))
+        sns.heatmap(H_masked, linewidth=0.5, square=True, cmap=cmap, ax=ax, cbar_kws={"shrink": 0.73})
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+        ax.set_xlabel(r'$\theta_j$')
+        ax.set_ylabel(r'$\theta_i$')
+        plt.tight_layout()
+        plt.show(block=False)
 
     plt.figure(layout="tight")
     plt.title("Training data: baseline + orth. augm. decomposition")

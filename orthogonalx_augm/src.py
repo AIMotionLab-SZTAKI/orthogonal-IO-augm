@@ -268,9 +268,9 @@ class IO_orthogonal_augmentation(object):
         # orthogonality check
         self.training_orthogonality = Phi_train.T @ (learning_component_train - Phi_train @ self.theta_aux)
 
-    def approx_Hessian(self, Xi_train: np.ndarray, Y_train: np.ndarray, N: int):
+    def approx_covariance_mx(self, Xi_train: np.ndarray, Y_train: np.ndarray, N: int, ny: int):
         """
-        Approximates the hessian of the cost function at the optimized parameters.
+        Approximates the covariance matrix of the estimated parameters.
 
         Args:
             Xi_train (array-like): Contains the baseline regression points of the training data. Its shape should be compatible with the
@@ -279,10 +279,13 @@ class IO_orthogonal_augmentation(object):
             N (int): Length of the training data set.
         
         Returns:
-            The approximated Hessian matrix.
+            tuple (P, Psi)
+            - P (array-like): estimated covariance matrix.
+            - Psi (array-like): Jacobian matrix of the cost function around the estimated parameters to validate the block-matrix natrure
+            of the Jacobian.
         """
 
-        def error(params):
+        def error_i(params, i):
             Phi_train = self.phi(Xi_train)
             K_phi = jnp.linalg.pinv(Phi_train.T @ Phi_train) @ Phi_train.T
             learning_component = self.ANN_fun(Xi_train, params)
@@ -292,19 +295,39 @@ class IO_orthogonal_augmentation(object):
             orth_component = learning_component - Phi_train @ theta_aux
             Y_pred = baseline_component + orth_component
             Y_error = Y_train - Y_pred
-            return Y_error
+            return Y_error[i]
 
-        jac = jax.jacrev(error)(self.params)
-        i_max = len(jac) - 1
+        def organize_jac(jac):
+            i_max = len(jac) - 1
+            for i in range(len(jac)):
+                Ji = np.squeeze(np.array(jac[i_max - i])).reshape(ny, -1)
+                if i == 0:
+                    J = Ji
+                else:
+                    J = np.hstack((J, Ji))
+            return J
+        
+        Yerr = Y_train - self.predict(Y_train)[0]
+        Sigma_0 = np.zeros((ny, ny))
+        for y in Yerr:
+            Sigma_0 += y.reshape(1, ny) @ y.reshape(ny, 1)
+        Sigma_0 = Sigma_0 / N
 
-        for i in range(len(jac)):
-            Ji = np.squeeze(np.array(jac[i_max-i])).reshape(N, -1)
+        for i in range(N):
+            psi = organize_jac(jax.jacrev(error_i, argnums=0)(self.params, i))
             if i == 0:
-                J = Ji
+                Psi = psi.T @ psi
+                Psi_sigma = psi.T @ Sigma_0 @ psi
             else:
-                J = np.hstack((J, Ji))
+                Psi += psi.T @ psi
+                Psi_sigma += psi.T @ Sigma_0 @ psi
+        
+        Psi_inv = np.linalg.pinv(np.array(Psi))
 
-        return 2 / N * J.T @ J
+        P = Psi_inv @ np.array(Psi_sigma * 2 / N) @ Psi_inv
+        P = P / N
+
+        return P, Psi
 
     def predict(self, Xi_test: np.ndarray):
         """

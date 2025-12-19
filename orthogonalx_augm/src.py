@@ -66,6 +66,8 @@ class IO_augmentation(object):
             params (list): Initial values of the optimized parameters. List elements should be numpy arrays with the last 1D numpy array containing
                 the baseline parameters.
         """
+        self.init_baseline_param = params[-1].copy()
+        self.regul_mx = np.diag(1 / self.init_baseline_param**2)
         self.params = params
 
     def set_training_params(self, adam_epochs=None, lbfgs_epochs=None, adam_lr=None, lbfgs_tol=None, lbfgs_memory=None):
@@ -93,7 +95,7 @@ class IO_augmentation(object):
 
         self.lbfgs_options = lbfgs_options(50, self.lbfgs_epochs, self.lbfgs_tol, self.lbfgs_memory)
 
-    def fit(self, Xi_train: np.ndarray, Y_train: np.ndarray):
+    def fit(self, Xi_train: np.ndarray, Y_train: np.ndarray, orth_regul_coeff=0., simple_reg_coeff=0.):
         """
         Trains the standard additive augmentation model.
 
@@ -101,9 +103,15 @@ class IO_augmentation(object):
             Xi_train (array-like): Contains the baseline regression points of the training data. Its shape should be compatible with the
                 provided phi_function.
             Y_train (array-like): Contains the measured output values of the training set.
+            orth_regul_coeff (float, optioanl): Trade-off parameter for orthogonal regularization.
+            simple_reg_coeff (float, optional): Trade-off parameter for baseline regularization method. (Penalizing deviations of the baseline
+                parameters compared to their nominal values.)
         """
 
         Phi_train = self.phi(Xi_train)
+
+        if orth_regul_coeff > 0:
+            Q_orth, _, _ = np.linalg.svd(Phi_train, full_matrices=False)
 
         @jax.jit
         def J(params):
@@ -111,8 +119,14 @@ class IO_augmentation(object):
             theta_base = params[-1]
             baseline_component = Phi_train @ theta_base.reshape(-1, 1)
             Y_pred = baseline_component + learning_component
-            Y_error = jnp.mean(jnp.sum((Y_train - Y_pred) ** 2, axis=0))
-            return Y_error
+            cost = jnp.mean(jnp.sum((Y_train - Y_pred) ** 2, axis=0))
+            if orth_regul_coeff > 0:
+                orth_comp = jnp.linalg.norm(Q_orth.T @ learning_component.reshape(-1), 2)**2
+                cost += orth_regul_coeff * orth_comp
+            if simple_reg_coeff > 0:
+                theta_dev = (self.init_baseline_param - theta_base).reshape(1, -1) @ self.regul_mx @ (self.init_baseline_param - theta_base).reshape(-1, 1)
+                cost += simple_reg_coeff * theta_dev[0, 0]
+            return cost
 
         def JdJ(th):
             return jax.value_and_grad(J)(th)

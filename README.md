@@ -24,7 +24,7 @@ To run the example script for the orthogonal-by-construction parametrization:
 python3 examples/orth_by_constr_augm.py
 ```
 
-Training options regarding length of the estimation data, measurement noise, initialization, etc., can be specified by editing the corresponding parts of the script. For benchmarking, the standard additive model augmentation structure can be trained on the same example problem by running the scipt `examples/standard_additive_augm.py`.
+Training options regarding the length of the estimation data, measurement noise, initialization, etc., can be specified by editing the corresponding parts of the script. For benchmarking, the standard additive model augmentation structure can be trained on the same example problem by running the script `examples/standard_additive_augm.py`. A physics-motivated simulation example can be found in `examples/NARX_example_orth_by_constr.py`. A comparison with regularization-based techniques is also available: `examples/NARX_example_regul_methods.py`.
 
 ## Citation
 ```

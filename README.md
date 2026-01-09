@@ -37,7 +37,7 @@ Training options regarding the length of the estimation data, measurement noise,
 ```
 
 ## Funding
-This project has received funding from the European Defence Fund programme under grant agreement number No 101103386 and has also been supported by the Air Force Office of Scientific Research under award number FA8655-23-1-7061. This work is also partly funded by the European Union (ERC, COMPLETE, 101075836). Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or the European Commission or the European Research Council Executive Agency. Neither the European Union nor the granting authority can be held responsible for them.
+This project has been supported by the Air Force Office of Scientific Research under award number FA8655-23-1-7061. This work is also partly funded by the European Union (ERC, COMPLETE, 101075836). Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or the European Research Council Executive Agency. Neither the European Union nor the granting authority can be held responsible for them.
 
 ## License
 See the [LICENSE](/LICENSE) file for license rights and limitations (MIT).

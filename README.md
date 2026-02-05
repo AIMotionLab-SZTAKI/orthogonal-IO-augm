@@ -1,5 +1,5 @@
 # Orthogonal-by-construction model augmentation with JAX
-Contains the code implementation and example scripts for the manuscript titled *Orthogonal-by-construction augmentation of physics-based input-output models* (currently submitted for publication). The preprint is available on [arXiv](https://arxiv.org/abs/2511.01321).
+Contains the code implementation and example scripts for the paper titled *Orthogonal-by-construction augmentation of physics-based input-output models*. The published version is available [here](https://doi.org/10.1016/j.ifacsc.2026.100376).
 
 ## Installation
 To install the code implementation and the example scripts, first, clone the repository, then open the project folder as
@@ -28,11 +28,13 @@ Training options regarding the length of the estimation data, measurement noise,
 
 ## Citation
 ```
-@article{gyorok_orthogonal_2025,
+@article{gyorok_orthogonal_2026,
     title={Orthogonal-by-construction augmentation of physics-based input-output models}, 
     author={Bendegúz M. Györök and Maarten Schoukens and Tamás Péni and Roland Tóth},
-    year={2025},
-    journal={arXiv preprint arXiv:2511.01321}
+    journal = {IFAC Journal of Systems and Control},
+    volume = {35},
+    pages = {100376},
+    year = {2026}
 }
 ```
 
